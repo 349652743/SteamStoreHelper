@@ -1,5 +1,5 @@
-
-import storage from "./storage.js";
+const request = require('request');
+const storage = require("./storage.js")
 
 const eCurrencyCode = 23
 
@@ -10,18 +10,14 @@ function getItemId(buffItemId, steamLink) {
             resolve(steamItemId);
             return;
         }
-
+        console.log(steamLink)
         var option = {
-            method: "GET",
             url: steamLink,
-            json: true,
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            headers:{'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'}
         };
-        request(option, function (err, res, body) {
+        request.get(option, function (err, res, body) {
             if (err) {
-                console.log("Steam itemId 访问失败", res);
+                console.log("Steam itemId 访问失败");
                 reject(err);
             } else {
                 if (res.status == 200) {
@@ -63,6 +59,7 @@ function getSteamOrderList(buffItemId, steamLink) {
                     reject(null);
                 } else {
                     if(res.status == 200) {
+                        console.log("访问steamorder success", res);
                         resolve(JSON.parse(body));
                     }else {
                         console.log("访问steamorder状态异常", res);
@@ -71,7 +68,14 @@ function getSteamOrderList(buffItemId, steamLink) {
                 }
             });
         }).catch((err) => {
-            resolve(null)
+            console.log(err)
+            reject(null)
         });
     });
+}
+
+//导出getitemid 和 getSteamOrderList
+module.exports = {
+    getItemId,
+    getSteamOrderList
 }
