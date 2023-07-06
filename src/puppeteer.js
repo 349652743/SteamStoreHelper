@@ -1,5 +1,4 @@
 // We'll use Puppeteer is our browser automation framework.
-const request = require('request');
 const puppeteer = require('puppeteer-extra')
 
 // add stealth plugin and use defaults (all evasion techniques)
@@ -11,26 +10,6 @@ const sleep = (time) => {
     return new Promise((resolve) => setTimeout(resolve, time));
 }
 
-const sendRequest = (method, url, body) => {
-    return new Promise((resolve, reject) => {
-        var option = {
-            method: method,
-            url: url,
-            body: body,
-            json: true,
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        };
-        request(option, function (err, res, body) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(body);
-            }
-        });
-    });
-}
 
 const clickElement = async (page, selector) => {
     if (await page.$(selector)) {
@@ -85,6 +64,19 @@ const launchLoginPage = async (page) => {
         if(/api\/market\/goods/.exec(response.url())) {
             const res = JSON.parse(await response.text());
             console.log('Response URL:', res.data.items);
+            res.data.items.forEach(item => {
+                let buffItemId = item.id;                                     // buff商品ID
+                let steamMarketUrl = item.steam_market_url;                   // steam市场链接
+
+                
+                let buff_buy_num = item.buy_num;                                // buff求购数量
+                let buff_buy_max_price = item.buy_max_price;                    // buff求购最高价
+                let buff_sell_num = item.sell_num;                              // buff出售数量
+                let buff_sell_min_price = item.sell_min_price;                  // buff出售最低价
+                let steam_price_cny = item.goods_info.steam_price_cny * 100;    // buff提供的steam国区售价
+
+                let buff_sell_reference_price = item.sell_reference_price;      // buff出售参考价(没卵用)
+            });
         }
     });
 
@@ -99,7 +91,6 @@ const launchLoginPage = async (page) => {
         return;
     }
     // Save a screenshot of the results.
-
     await page.screenshot({ path: 'headless-test-result.png' });
 
     // Clean up.
