@@ -54,11 +54,11 @@ const launchLoginPage = async (page) => {
 
 const processBuffItem = async (item) => {
     console.log(item);
-    let buffItemId = item.id;                                       
-    let steamMarketUrl = item.steam_market_url;                   
-    let buffSellMinPrice = item.sell_min_price                      
+    let buffItemId = item.id;
+    let steamMarketUrl = item.steam_market_url;
+    let buffSellMinPrice = item.sell_min_price
     let buffHashName = item.market_hash_name
-    let buffAppId = item.appid             
+    let buffAppId = item.appid
     try {
         let steamOrders = await steamAPI.getSteamOrderList(buffItemId, steamMarketUrl);
         let steamLowerstPrice = steamOrders.lowest_sell_order / 100.0;
@@ -68,40 +68,52 @@ const processBuffItem = async (item) => {
         let itemInfo = {
             scale: scale,
             buff_sell_min_price: buffSellMinPrice,
-            steam_price_cny: steamLowerstPrice,
+            steam_lowerst_price: steamLowerstPrice,
             achieved_price: withoutFeePrice,
             name: item.name,
             daily_sold_number: steamSoldNumber.volume
         }
-        
         console.log(itemInfo)
-    } catch(e) {
+    } catch (e) {
         console.log("catched get steam order error")
         console.log(e)
     }
 }
 
+const gotoBuffMarketPage = async (page, pageNum, needReload = false) => {
+    const marketUrl = 'https://buff.163.com/market/csgo#tab=selling&page_num=' + ((pageNum % 300) + 1);
+    console.log('Goto Buff Order List: ' + marketUrl)
+    await page.goto(marketUrl)
+    if (needReload) {
+        await page.reload()
+    }
+}
+
+
 (async () => {
     // Navigate to the page that will perform the tests.
+    let pageNum = 0
 
-    const marketUrl = 'https://buff.163.com/market/csgo#tab=selling&page_num=1';
     let browser = await launchBrowser(true);
 
     let page = await browser.newPage();
 
-     // 监听页面内的所有网络响应
-     page.on('response', async response => {
-        if(/api\/market\/goods/.exec(response.url())) {
+    // 监听页面内的所有网络响应
+    page.on('response', async response => {
+        if (/api\/market\/goods/.exec(response.url())) {
             const res = JSON.parse(await response.text());  
             for(const item of res.data.items) {
                 processBuffItem(item)
                 await sleep(5000);
                 console.log('=======================')
             }
+            setTimeout(() => {
+                gotoBuffMarketPage(page, ++pageNum, true)
+            }, 5000)
         }
     });
 
-    await page.goto(marketUrl);
+    await gotoBuffMarketPage(page, pageNum);
 
     await sleep(1000);
     const loginBtn = await getLoginBtn(page);
@@ -112,8 +124,5 @@ const processBuffItem = async (item) => {
         return;
     }
     // Save a screenshot of the results.
-    await page.screenshot({ path: 'headless-test-result.png' });
-
-    // Clean up.
-    await browser.close()
+    // await page.screenshot({ path: 'headless-test-result.png' });
 })();
