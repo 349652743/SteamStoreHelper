@@ -11,19 +11,6 @@ const sleep = (time) => {
     return new Promise((resolve) => setTimeout(resolve, time));
 }
 
-
-const clickElement = async (page, selector) => {
-    if (await page.$(selector)) {
-        await page.click(selector)
-    }
-}
-
-const typeElement = async (page, message, selector) => {
-    if (await page.$(selector)) {
-        await page.type(selector, message, { delay: 100 })
-    }
-}
-
 const getLoginBtn = async (page) => {
     return await (page.$$eval('a', links => links.filter(link => link.textContent === '登录/注册'))[0])
 }
@@ -91,11 +78,8 @@ const gotoBuffMarketPage = async (page, pageNum, needReload = false) => {
 
 
 (async () => {
-    // Navigate to the page that will perform the tests.
     let pageNum = 0
-
     let browser = await launchBrowser(true);
-
     let page = await browser.newPage();
 
     // 监听页面内的所有网络响应
