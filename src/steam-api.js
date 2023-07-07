@@ -13,7 +13,7 @@ function getItemId(buffItemId, steamLink) {
         const options = {
             url: steamLink,
             headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
             }
         };
         request.get(options, function (err, res, body) {
@@ -38,7 +38,7 @@ function getItemId(buffItemId, steamLink) {
 }
 
 function getSteamOrderList(buffItemId, steamLink) {
-    return new Promise(function (resolve, reject) {    
+    return new Promise(function (resolve, reject) {
         getItemId(buffItemId, steamLink).then(steamItemId => {
             var option = {
                 url: `https://steamcommunity.com/market/itemordershistogram?country=CN&language=schinese&currency=${eCurrencyCode}&item_nameid=${steamItemId}&two_factor=0`,

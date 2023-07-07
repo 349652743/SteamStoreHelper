@@ -101,8 +101,8 @@ const gotoBuffMarketPage = async (page, pageNum, needReload = false) => {
     // 监听页面内的所有网络响应
     page.on('response', async response => {
         if (/api\/market\/goods/.exec(response.url())) {
-            const res = JSON.parse(await response.text());  
-            for(const item of res.data.items) {
+            const res = JSON.parse(await response.text());
+            for (const item of res.data.items) {
                 processBuffItem(item)
                 await sleep(5000);
                 console.log('=======================')
