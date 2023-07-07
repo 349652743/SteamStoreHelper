@@ -11,31 +11,29 @@ function getItemId(buffItemId, steamLink) {
             return;
         }
         console.log(steamLink)
-        var option = {
+        const options = {
             url: steamLink,
-            headers:{'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'}
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+            }
         };
-        request.get(option, function (err, res, body) {
-            if (err) {
-                console.log("Steam itemId 访问失败");
+        request.get(options, function (err, res, body) {
+            if (err || res.statusCode != 200) {
+                console.log("steamItemId request error");
                 reject(err);
             } else {
-                if (res.status == 200) {
-                    let html = body;  // 页面很大
-                    try {
-                        steamItemId = /Market_LoadOrderSpread\(\s?(\d+)\s?\)/.exec(html)[1];
-                    } catch (error) {
-                        storage.setCache(buff_item_id, null);
-                        console.log("获取itemID状态异常：", res);
-                        reject(null);
-                        return;
-                    }
-                    storage.setCache(buffItemId, steamItemId);
-                    resolve(steamItemId);
-                } else {
-                    console.log("获取itemID状态异常：", res);
-                    reject(null);
+                let html = body;  // body is huge
+                try {
+                    steamItemId = /Market_LoadOrderSpread\(\s?(\d+)\s?\)/.exec(html)[1];
+                } catch (error) {
+                    storage.setCache(buffItemId, null);
+                    console.log("parse steam item id error");
+                    reject(error);
+                    return;
                 }
+                storage.setCache(buffItemId, steamItemId);
+                console.log("steamItemId request success");
+                resolve(steamItemId);
             }
         });
     });
@@ -44,30 +42,24 @@ function getItemId(buffItemId, steamLink) {
 function getSteamOrderList(buffItemId, steamLink) {
     return new Promise(function (resolve, reject) {    
         getItemId(buffItemId, steamLink).then(steamItemId => {
+            console.log("steam id is:" + steamItemId)
             var option = {
-                method: method,
                 url: `https://steamcommunity.com/market/itemordershistogram?country=CN&language=schinese&currency=${eCurrencyCode}&item_nameid=${steamItemId}&two_factor=0`,
-                body: 'GET',
-                json: true,
                 headers: {
-                    'Content-Type': 'application/json'
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
                 }
             };
-            request(option, function (err, res, body) {
-                if (err) {
-                    console.log("steam order访问失败", res);
-                    reject(null);
+            request.get(option, function (err, res, body) {
+                if (err || res.statusCode != 200) {
+                    console.log("steamOrders reuqest error", res);
+                    reject(err);
                 } else {
-                    if(res.status == 200) {
-                        console.log("访问steamorder success", res);
-                        resolve(JSON.parse(body));
-                    }else {
-                        console.log("访问steamorder状态异常", res);
-                        reject(null);
-                    }
+                    console.log('steamOrders request success')
+                    resolve(JSON.parse(body));
                 }
             });
         }).catch((err) => {
+            console.log("catched get steam id error")
             console.log(err)
             reject(null)
         });

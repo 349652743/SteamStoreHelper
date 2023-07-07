@@ -69,8 +69,12 @@ const launchLoginPage = async (page) => {
             console.log(item);
             let buffItemId = item.id;                                     // buff商品ID
             let steamMarketUrl = item.steam_market_url;  
-            let steamOrder = await steamAPI.getSteamOrderList(buffItemId, steamMarketUrl);
-            console.log(steamOrder)
+            try {
+                let steamOrder = await steamAPI.getSteamOrderList(buffItemId, steamMarketUrl);
+                console.log(steamOrder)
+            } catch(e) {
+                console.log(e)
+            }
             // res.data.items.forEach(item => {
             //     let buffItemId = item.id;                                     // buff商品ID
             //     let steamMarketUrl = item.steam_market_url;                   // steam市场链接
