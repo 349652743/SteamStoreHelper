@@ -52,6 +52,35 @@ const launchLoginPage = async (page) => {
     await browser.close()
 }
 
+const processBuffItem = async (item) => {
+    console.log(item);
+    let buffItemId = item.id;                                       
+    let steamMarketUrl = item.steam_market_url;                   
+    let buffSellMinPrice = item.sell_min_price                      
+    let buffHashName = item.market_hash_name
+    let buffAppId = item.appid             
+    try {
+        let steamOrders = await steamAPI.getSteamOrderList(buffItemId, steamMarketUrl);
+        let steamLowerstPrice = steamOrders.lowest_sell_order / 100.0;
+        let withoutFeePrice = (steamLowerstPrice * 0.8696596669).toFixed(2);
+        let scale = (buffSellMinPrice / withoutFeePrice).toFixed(2);
+        let steamSoldNumber = await steamAPI.getSteamSoldNumber(buffAppId, buffHashName)
+        let itemInfo = {
+            scale: scale,
+            buff_sell_min_price: buffSellMinPrice,
+            steam_price_cny: steamLowerstPrice,
+            achieved_price: withoutFeePrice,
+            name: item.name,
+            daily_sold_number: steamSoldNumber.volume
+        }
+        
+        console.log(itemInfo)
+    } catch(e) {
+        console.log("catched get steam order error")
+        console.log(e)
+    }
+}
+
 (async () => {
     // Navigate to the page that will perform the tests.
 
@@ -63,31 +92,12 @@ const launchLoginPage = async (page) => {
      // 监听页面内的所有网络响应
      page.on('response', async response => {
         if(/api\/market\/goods/.exec(response.url())) {
-            const res = JSON.parse(await response.text());
-            // console.log('Response URL:', res.data.items);
-            let item = res.data.items[0]
-            console.log(item);
-            let buffItemId = item.id;                                     // buff商品ID
-            let steamMarketUrl = item.steam_market_url;  
-            try {
-                let steamOrder = await steamAPI.getSteamOrderList(buffItemId, steamMarketUrl);
-                console.log(steamOrder)
-            } catch(e) {
-                console.log(e)
+            const res = JSON.parse(await response.text());  
+            for(const item of res.data.items) {
+                processBuffItem(item)
+                await sleep(5000);
+                console.log('=======================')
             }
-            // res.data.items.forEach(item => {
-            //     let buffItemId = item.id;                                     // buff商品ID
-            //     let steamMarketUrl = item.steam_market_url;                   // steam市场链接
-                
-                
-                // let buff_buy_num = item.buy_num;                                // buff求购数量
-                // let buff_buy_max_price = item.buy_max_price;                    // buff求购最高价
-                // let buff_sell_num = item.sell_num;                              // buff出售数量
-                // let buff_sell_min_price = item.sell_min_price;                  // buff出售最低价
-                // let steam_price_cny = item.goods_info.steam_price_cny * 100;    // buff提供的steam国区售价
-
-                // let buff_sell_reference_price = item.sell_reference_price;      // buff出售参考价(没卵用)
-            // });
         }
     });
 

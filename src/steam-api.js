@@ -10,7 +10,6 @@ function getItemId(buffItemId, steamLink) {
             resolve(steamItemId);
             return;
         }
-        console.log(steamLink)
         const options = {
             url: steamLink,
             headers: {
@@ -19,8 +18,7 @@ function getItemId(buffItemId, steamLink) {
         };
         request.get(options, function (err, res, body) {
             if (err || res.statusCode != 200) {
-                console.log("steamItemId request error");
-                reject(err);
+                reject(err ? err : new Error('getSteamItemId statusCode != 200'));
             } else {
                 let html = body;  // body is huge
                 try {
@@ -32,7 +30,7 @@ function getItemId(buffItemId, steamLink) {
                     return;
                 }
                 storage.setCache(buffItemId, steamItemId);
-                console.log("steamItemId request success");
+                console.log("steam id is: " + steamItemId)
                 resolve(steamItemId);
             }
         });
@@ -42,7 +40,6 @@ function getItemId(buffItemId, steamLink) {
 function getSteamOrderList(buffItemId, steamLink) {
     return new Promise(function (resolve, reject) {    
         getItemId(buffItemId, steamLink).then(steamItemId => {
-            console.log("steam id is:" + steamItemId)
             var option = {
                 url: `https://steamcommunity.com/market/itemordershistogram?country=CN&language=schinese&currency=${eCurrencyCode}&item_nameid=${steamItemId}&two_factor=0`,
                 headers: {
@@ -51,17 +48,33 @@ function getSteamOrderList(buffItemId, steamLink) {
             };
             request.get(option, function (err, res, body) {
                 if (err || res.statusCode != 200) {
-                    console.log("steamOrders reuqest error", res);
-                    reject(err);
+                    reject(err ? err : new Error('getSteamOrderList statusCode != 200'));
                 } else {
-                    console.log('steamOrders request success')
                     resolve(JSON.parse(body));
                 }
             });
         }).catch((err) => {
             console.log("catched get steam id error")
-            console.log(err)
-            reject(null)
+            reject(err)
+        });
+    });
+}
+
+
+function getSteamSoldNumber(appId, hashName) {
+    return new Promise(function (resolve, reject) {
+        var option = {
+            url: `https://steamcommunity.com/market/priceoverview/?appid=${appId}&currency=${eCurrencyCode}&market_hash_name=${hashName}`,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+            }
+        };
+        request.get(option, function (err, res, body) {
+            if (err || res.statusCode != 200) {
+                reject(err ? err : new Error('getSteamSoldNumber statusCode != 200'));
+            } else {
+                resolve(JSON.parse(body));
+            }
         });
     });
 }
@@ -69,5 +82,6 @@ function getSteamOrderList(buffItemId, steamLink) {
 //导出getitemid 和 getSteamOrderList
 module.exports = {
     getItemId,
-    getSteamOrderList
+    getSteamOrderList,
+    getSteamSoldNumber
 }
