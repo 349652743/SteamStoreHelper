@@ -1,6 +1,7 @@
 // We'll use Puppeteer is our browser automation framework.
 const puppeteer = require('puppeteer-extra')
 const steamAPI = require('./steam-api.js')
+const googleSheet = require('./google-sheet.js')
 
 // add stealth plugin and use defaults (all evasion techniques)
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
@@ -61,6 +62,7 @@ const processBuffItem = async (item) => {
             daily_sold_number: steamSoldNumber.volume
         }
         console.log(itemInfo)
+        googleSheet.appendDataToSheet(itemInfo)
     } catch (e) {
         console.log("catched get steam order error")
         console.log(e)

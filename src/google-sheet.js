@@ -6,11 +6,23 @@ const auth = new google.auth.GoogleAuth({
   scopes: ['https://www.googleapis.com/auth/spreadsheets'],
 });
 
-(async () => {
-    const sheets = google.sheets({ version: 'v4', auth: auth });
-    const spreadsheetId = '1TX7Y16n7DsPaTojMb_c3LVNp2Hgwtt4EvIrWJIHaWPA';
-    const range = 'Sheet1!A1:C3';
-    const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
-    const data = response.data.values;
-    console.log(data);
-})();
+const sheets = google.sheets({ version: 'v4', auth: auth });
+const spreadsheetId = '1TX7Y16n7DsPaTojMb_c3LVNp2Hgwtt4EvIrWJIHaWPA';
+
+const appendDataToSheet = async (itemInfo) => {
+  await sheets.spreadsheets.values.append({
+    spreadsheetId,
+    range: 'Sheet1!A1',
+    valueInputOption: 'USER_ENTERED',
+    resource: {
+      values: [Object.values(itemInfo)]
+    },
+  }, (err, res) => {
+    if (err) return console.error(err);
+    console.log(`${res.data.updates.updatedCells} cells appended.`);
+  });
+}
+
+module.exports = {
+  appendDataToSheet
+}
