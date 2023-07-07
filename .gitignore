@@ -3,3 +3,4 @@ user_data
 package-lock.json
 headless-test-result.png
 src/storage.json
+credentials.json
