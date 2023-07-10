@@ -2,11 +2,15 @@
 const puppeteer = require('puppeteer-extra')
 const steamAPI = require('./steam-api.js')
 const googleSheet = require('./google-sheet.js')
+const fs = require('fs');
+const path = require('path');
+
 
 // add stealth plugin and use defaults (all evasion techniques)
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 puppeteer.use(StealthPlugin())
 
+const COOKIES_FILE = path.join(__dirname, '..', 'cookies.json');
 
 const sleep = (time) => {
     return new Promise((resolve) => setTimeout(resolve, time));
@@ -19,7 +23,6 @@ const getLoginUser = async (page) => {
 const launchBrowser = async (headless) => {
     return await puppeteer.launch({
         args: ['--no-sandbox', `--window-size=${1920},${1080}`],
-        userDataDir: '../user_data',
         headless: headless,
     });
 }
@@ -83,11 +86,25 @@ const gotoBuffHomePage = async (page) => {
     await page.goto(buffUrl)
 }
 
+const loadCookies = async(page) => {
+    if (fs.existsSync(COOKIES_FILE)) {
+        const cookies = JSON.parse(fs.readFileSync(COOKIES_FILE));
+        await page.setCookie(...cookies);
+    }
+}
+
+const saveCookies = async(page) => {
+    const cookies = await page.cookies();
+    fs.writeFileSync(COOKIES_FILE, JSON.stringify(cookies, null, 2));
+}
+
+
 
 (async () => {
     let pageNum = 0
     let browser = await launchBrowser(true);
     let page = await browser.newPage();
+    await loadCookies(page)
     await gotoBuffHomePage(page)
     await sleep(3000);
     const loginBtn = await getLoginUser(page);
@@ -98,13 +115,14 @@ const gotoBuffHomePage = async (page) => {
         await launchLoginPage();
         return;
     } else {
+        saveCookies(page)
         // 监听页面内的所有网络响应
         page.on('response', async response => {
             if (/api\/market\/goods/.exec(response.url())) {
                 const res = JSON.parse(await response.text());
                 for (const item of res.data.items) {
                     processBuffItem(item)
-                    await sleep(5000);
+                    await sleep(10000);
                     console.log('=======================')
                 }
                 setTimeout(() => {

@@ -41,8 +41,9 @@ function getItemId(buffItemId, steamLink) {
 function getSteamOrderList(buffItemId, steamLink) {
     return new Promise(function (resolve, reject) {
         getItemId(buffItemId, steamLink).then(steamItemId => {
+            const url = `https://steamcommunity.com/market/itemordershistogram?country=CN&language=schinese&currency=${eCurrencyCode}&item_nameid=${steamItemId}&two_factor=0`
             var option = {
-                url: `https://steamcommunity.com/market/itemordershistogram?country=CN&language=schinese&currency=${eCurrencyCode}&item_nameid=${steamItemId}&two_factor=0`,
+                url: encodeURI(url),
                 headers: {
                     'Connection': 'close',
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
@@ -65,8 +66,9 @@ function getSteamOrderList(buffItemId, steamLink) {
 
 function getSteamSoldNumber(appId, hashName) {
     return new Promise(function (resolve, reject) {
+        const url = `https://steamcommunity.com/market/priceoverview/?appid=${appId}&currency=${eCurrencyCode}&market_hash_name=${hashName}`
         var option = {
-            url: `https://steamcommunity.com/market/priceoverview/?appid=${appId}&currency=${eCurrencyCode}&market_hash_name=${hashName}`,
+            url: encodeURI(url),
             headers: {
                 'Connection': 'close',
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
