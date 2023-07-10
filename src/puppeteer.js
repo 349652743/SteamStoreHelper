@@ -38,8 +38,23 @@ const launchLoginPage = async (page) => {
         await sleep(3000)
         loginBtn = await getLoginUser(loginPage)
     }
+    await saveCookies(page)
     await sleep(1000)
     await browser.close()
+}
+
+//按照 YYYY-MM-DD hh:mm:ss 的格式返回当前日期
+const getNowFormatDate = () => {
+    const now = new Date();
+    const dateTimeString = now.toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    return dateTimeString
 }
 
 const processBuffItem = async (item) => {
@@ -61,7 +76,8 @@ const processBuffItem = async (item) => {
             steam_lowerst_price: steamLowerstPrice,
             achieved_price: withoutFeePrice,
             name: item.name,
-            daily_sold_number: steamSoldNumber.volume
+            daily_sold_number: steamSoldNumber.volume,
+            current_date: getNowFormatDate()
         }
         console.log(itemInfo)
         googleSheet.appendDataToSheet(itemInfo)
@@ -86,14 +102,14 @@ const gotoBuffHomePage = async (page) => {
     await page.goto(buffUrl)
 }
 
-const loadCookies = async(page) => {
+const loadCookies = async (page) => {
     if (fs.existsSync(COOKIES_FILE)) {
         const cookies = JSON.parse(fs.readFileSync(COOKIES_FILE));
         await page.setCookie(...cookies);
     }
 }
 
-const saveCookies = async(page) => {
+const saveCookies = async (page) => {
     const cookies = await page.cookies();
     fs.writeFileSync(COOKIES_FILE, JSON.stringify(cookies, null, 2));
 }
