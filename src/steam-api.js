@@ -13,6 +13,7 @@ function getItemId(buffItemId, steamLink) {
         const options = {
             url: steamLink,
             headers: {
+                'Connection': 'close',
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
             }
         };
@@ -43,6 +44,7 @@ function getSteamOrderList(buffItemId, steamLink) {
             var option = {
                 url: `https://steamcommunity.com/market/itemordershistogram?country=CN&language=schinese&currency=${eCurrencyCode}&item_nameid=${steamItemId}&two_factor=0`,
                 headers: {
+                    'Connection': 'close',
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
                 }
             };
@@ -66,6 +68,7 @@ function getSteamSoldNumber(appId, hashName) {
         var option = {
             url: `https://steamcommunity.com/market/priceoverview/?appid=${appId}&currency=${eCurrencyCode}&market_hash_name=${hashName}`,
             headers: {
+                'Connection': 'close',
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
             }
         };
