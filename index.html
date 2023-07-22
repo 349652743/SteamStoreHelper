@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>请求数据并渲染</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #eee;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>商品列表</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>名称</th>
+                <th id="scaleHeader">缩放(点击切换排序)</th>
+                <th>Buff最低价格</th>
+                <th>Steam最低价格</th>
+                <th>已实现价格</th>
+                <th>每日销售量</th>
+                <th>更新时间</th>
+            </tr>
+        </thead>
+        <tbody id="data"></tbody>
+    </table>
+
+    <script>
+        let data = [];
+        let isAscending = true;
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', '/query');
+        xhr.onload = () => {
+            data = JSON.parse(xhr.responseText);
+            renderData(data);
+        };
+        xhr.send();
+
+        document.getElementById('scaleHeader').addEventListener('click', function() {
+            isAscending = !isAscending;
+            const sortedData = data.sort((a, b) => isAscending ? a.scale - b.scale : b.scale - a.scale);
+            renderData(sortedData);
+        });
+
+        function renderData(data) {
+            const tbody = document.getElementById('data');
+            tbody.innerHTML = '';
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>${item.scale}</td>
+                    <td>${item.buff_sell_min_price}</td>
+                    <td>${item.steam_lowerst_price}</td>
+                    <td>${item.achieved_price}</td>
+                    <td>${item.daily_sold_number}</td>
+                    <td>${item.update_time}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
