@@ -1,0 +1,16 @@
+proxy_server: 
+google_sheet: 
+  enable: false
+telegram_bot:
+  enable: true
+  token: 
+  chat_id: 
+  
+
+database:
+  enable: true
+  host: 
+  user: 
+  password: 
+  database: 
+  port: 

@@ -22,7 +22,8 @@ const handleGetRequest = async (req, res) => {
         // 查询当天时间内的数据
         const [rows] = await pool.query(`
         SELECT
-        *
+        *,
+        CONCAT(FLOOR(TIMESTAMPDIFF(SECOND, update_time, NOW()) / 60), '分钟 ',TIMESTAMPDIFF(SECOND, update_time, NOW()) % 60, '秒') AS time_diff
         FROM steam_item  
         ORDER BY update_time DESC
         LIMIT 300;`);
@@ -35,7 +36,7 @@ const handleGetRequest = async (req, res) => {
                 achieved_price: row.achieved_price,
                 name: row.name,
                 daily_sold_number: row.daily_sold_number,
-                update_time: row.update_time,
+                update_time: row.time_diff,
             };
         });
         // 将请求的数据格式返回给客户端
