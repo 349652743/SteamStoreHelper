@@ -142,19 +142,15 @@ const uploadSteamItem = async (itemInfo) => {
     if (config.telegram_bot.enable == true) {
         try {
             const telegramBot = require('./telegram-bot.js')
-            if (itemInfo.scale <= 0.75 && itemInfo.daily_sold_number >= 500) {
-                itemInfo['type'] = '低比例订单'
-                await telegramBot.sendMessageToTelegram(JSON.stringify(itemInfo, null, 2), config.telegram_bot.token, config.telegram_bot.chat_id)
-            }
-
-            if (itemInfo.scale >= 1.05 && itemInfo.daily_sold_number >= 100) {
-                itemInfo['type'] = '高比例订单'
-                await telegramBot.sendMessageToTelegram(JSON.stringify(itemInfo, null, 2), config.telegram_bot.token, config.telegram_bot.chat_id)
-            }
-
             // STEAM 最高买单价 <= BUFF 最低卖单价
             if (itemInfo.steam_highest_buy_order <= itemInfo.buff_sell_min_price && itemInfo.daily_sold_number >= 100) {
                 itemInfo['type'] = '求购订单'
+                await telegramBot.sendMessageToTelegram(JSON.stringify(itemInfo, null, 2), config.telegram_bot.token, config.telegram_bot.chat_id)
+            } else if (itemInfo.scale <= 0.75 && itemInfo.daily_sold_number >= 500) {
+                itemInfo['type'] = '低比例订单'
+                await telegramBot.sendMessageToTelegram(JSON.stringify(itemInfo, null, 2), config.telegram_bot.token, config.telegram_bot.chat_id)
+            }else if (itemInfo.scale >= 1.05 && itemInfo.daily_sold_number >= 100) {
+                itemInfo['type'] = '高比例订单'
                 await telegramBot.sendMessageToTelegram(JSON.stringify(itemInfo, null, 2), config.telegram_bot.token, config.telegram_bot.chat_id)
             }
         } catch (e) {
