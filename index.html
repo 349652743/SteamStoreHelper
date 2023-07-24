@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <title>请求数据并渲染</title>
@@ -8,21 +9,55 @@
             border-collapse: collapse;
             width: 100%;
         }
-        th, td {
+
+        th,
+        td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
         }
+
         th {
             background-color: #eee;
         }
+
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
+
+        /* 给tab增加跟表格风格 相符的样式*/
+        .tab {
+            display: inline-block;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            background-color: #eee;
+            cursor: pointer;
+        }
+
+        .tab:hover {
+            background-color: #ddd;
+        }
+
+        .tab:first-child {
+            border-radius: 5px 0 0 0;
+        }
+
+        .tab:last-child {
+            border-radius: 0 5px 0 0;
+        }
+
+        .tab.active {
+            background-color: #fff;
+            border-bottom: 1px solid #fff;
+        }
     </style>
 </head>
+
 <body>
     <h1>商品列表</h1>
+    <div id="tabs"></div>
     <table>
         <thead>
             <tr>
@@ -41,31 +76,53 @@
     <script>
         let data = [];
         let isAscending = true;
+        let selectedApp = '';
 
         const xhr = new XMLHttpRequest();
         xhr.open('GET', '/query');
         xhr.onload = () => {
             data = JSON.parse(xhr.responseText);
+            renderTabs();
             renderData(data);
         };
         xhr.send();
 
-        document.getElementById('scaleHeader').addEventListener('click', function() {
+        document.getElementById('scaleHeader').addEventListener('click', function () {
             isAscending = !isAscending;
-            const sortedData = data.sort((a, b) => isAscending ? a.scale - b.scale : b.scale - a.scale);
+            const filteredData = (!selectedApp || selectedApp == '') ? data : data.filter(item => item.app === selectedApp);
+            const sortedData = filteredData.sort((a, b) => isAscending ? a.scale - b.scale : b.scale - a.scale);
             renderData(sortedData);
         });
 
-        function renderData(data) {
+        function renderTabs() {
+            const tabs = [...new Set(data.map(item => item.app))];
+            const tabsContainer = document.getElementById('tabs');
+            tabs.forEach(tab => {
+                const tabElement = document.createElement('div');
+                tabElement.textContent = tab;
+                tabElement.classList.add('tab');
+                tabsContainer.appendChild(tabElement);
+                tabElement.addEventListener('click', function () {
+                    selectedApp = tab;
+                    renderData(data.filter(item => item.app === selectedApp));
+                    // 给选中的tab增加选中样式，取消非选中tab的选中样式
+                    const activeTab = document.querySelector('.tab.active');
+                    activeTab && activeTab.classList.remove('active');
+                    this.classList.add('active');
+                });
+            });
+        }
+
+        function renderData(filteredData) {
             const tbody = document.getElementById('data');
             tbody.innerHTML = '';
-            data.forEach(item => {
+            filteredData.forEach(item => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${item.name}</td>
                     <td>${item.scale}</td>
                     <td>${item.buff_sell_min_price}</td>
-                    <td>${item.steam_lowerst_price}</td>
+                    <td>${item.steam_lowerst_sell_order}</td>
                     <td>${item.achieved_price}</td>
                     <td>${item.daily_sold_number}</td>
                     <td>${item.update_time}</td>
@@ -75,4 +132,5 @@
         }
     </script>
 </body>
+
 </html>

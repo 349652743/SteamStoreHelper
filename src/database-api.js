@@ -31,11 +31,11 @@ const uploadDataToDatabase = async (data) => {
     if (rows.length > 0) {
         // 如果已存在具有相同名称的记录，则更新该记录
         await pool.query(
-            'UPDATE steam_item SET scale = ?, buff_sell_min_price = ?, steam_lowerst_price = ?, achieved_price = ?, daily_sold_number = ? WHERE name = ?',
+            'UPDATE steam_item SET scale = ?, buff_sell_min_price = ?, steam_lowerst_sell_order = ?, achieved_price = ?, daily_sold_number = ? WHERE name = ?',
             [
                 data.scale,
                 data.buff_sell_min_price,
-                data.steam_lowerst_price,
+                data.steam_lowerst_sell_order,
                 data.achieved_price,
                 dailySoldNumber,
                 data.name
@@ -43,11 +43,11 @@ const uploadDataToDatabase = async (data) => {
     } else {
         // 如果不存在具有相同名称的记录，则插入新记录
         await pool.query(
-            'INSERT INTO steam_item (scale, buff_sell_min_price, steam_lowerst_price, achieved_price, name, daily_sold_number) VALUES (?, ?, ?, ?, ?, ?)',
+            'INSERT INTO steam_item (scale, buff_sell_min_price, steam_lowerst_sell_order, achieved_price, name, daily_sold_number) VALUES (?, ?, ?, ?, ?, ?)',
             [
                 data.scale,
                 data.buff_sell_min_price,
-                data.steam_lowerst_price,
+                data.steam_lowerst_sell_order,
                 data.achieved_price,
                 data.name,
                 dailySoldNumber

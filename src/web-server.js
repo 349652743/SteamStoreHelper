@@ -29,14 +29,17 @@ const handleGetRequest = async (req, res) => {
         LIMIT 300;`);
         // 将查询结果转换为请求的数据格式
         const data = rows.map(row => {
+            const games = ['csgo', 'dota'];
+            const randomGame = games[Math.floor(Math.random() * games.length)];
             return {
                 scale: row.scale,
                 buff_sell_min_price: row.buff_sell_min_price,
-                steam_lowerst_price: row.steam_lowerst_price,
+                steam_lowerst_sell_order: row.steam_lowerst_sell_order,
                 achieved_price: row.achieved_price,
                 name: row.name,
                 daily_sold_number: row.daily_sold_number,
                 update_time: row.time_diff,
+                app: randomGame
             };
         });
         // 将请求的数据格式返回给客户端

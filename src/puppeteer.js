@@ -74,8 +74,9 @@ const processBuffItem = async (item) => {
     let buffHashName = item.market_hash_name
     let buffAppId = item.appid
 
-    if (buffSellMinPrice < 2 || buffSellMinPrice > 100) {
-        console.log('buffSellMinPrice < 2 || buffSellMinPrice > 100 skip item：' + item.name)
+    if (buffSellMinPrice < 2 || buffSellMinPrice > 500) {
+        console.log('=======================')
+        console.log('skip item：' + item.name + ' reason： buffSellMinPrice is ' + buffSellMinPrice)
         return
     }
     let steamSoldNumber = null
@@ -86,11 +87,15 @@ const processBuffItem = async (item) => {
         console.log(e)
         return
     } finally {
-        await sleep(5000);
+        await sleep(2000);
     }
 
-    if (steamSoldNumber.volume < 100) {
-        console.log('steamSoldNumber.volume < 100 skip item：' + item.name)
+    if (!steamSoldNumber.volume || steamSoldNumber.volume < 100) {
+        console.log('=======================')
+        if(!steamSoldNumber.volume){
+            console.log(steamSoldNumber)
+        }
+        console.log('skip item：' + item.name + ' reason: steamSoldNumber is ' + steamSoldNumber.volume)
         return
     }
     let steamOrders = null
@@ -101,17 +106,18 @@ const processBuffItem = async (item) => {
         console.log(e)
         return
     } finally {
-        await sleep(10000);
+        await sleep(7000);
     }
 
-    let steamLowerstPrice = steamOrders.lowest_sell_order / 100.0;
-    let withoutFeePrice = (steamLowerstPrice * 0.8696596669).toFixed(2);
+    let steamHighestBuyOrder = steamOrders.highest_buy_order / 100.0;
+    let steamLowerstSellOrder = steamOrders.lowest_sell_order / 100.0;
+    let withoutFeePrice = (steamLowerstSellOrder * 0.8696596669).toFixed(2);
     let scale = (buffSellMinPrice / withoutFeePrice).toFixed(2);
-    if (scale < 1 && scale > 0.9) { return }
     let itemInfo = {
         scale: scale,
         buff_sell_min_price: buffSellMinPrice,
-        steam_lowerst_price: steamLowerstPrice,
+        steam_lowerst_sell_order: steamLowerstSellOrder,
+        steam_highest_buy_order: steamHighestBuyOrder,
         achieved_price: withoutFeePrice,
         name: item.name,
         daily_sold_number: steamSoldNumber.volume,
@@ -124,7 +130,7 @@ const processBuffItem = async (item) => {
 }
 
 const uploadSteamItem = async (itemInfo) => {
-    if(config.google_sheet.enable == true) {
+    if (config.google_sheet.enable == true) {
         try {
             const googleSheet = require('./google-sheet.js')
             await googleSheet.appendDataToSheet(itemInfo)
@@ -132,22 +138,36 @@ const uploadSteamItem = async (itemInfo) => {
             console.log("appendDataToSheet error")
         }
     }
-    
-    if(config.telegram_bot.enable == true) {
+
+    if (config.telegram_bot.enable == true) {
         try {
             const telegramBot = require('./telegram-bot.js')
-            if ((itemInfo.scale <= 0.75 && itemInfo.daily_sold_number >= 500) || (itemInfo.scale >= 1.05 && itemInfo.daily_sold_number >= 300)) {
+            if (itemInfo.scale <= 0.75 && itemInfo.daily_sold_number >= 500) {
+                itemInfo['type'] = '低比例订单'
+                await telegramBot.sendMessageToTelegram(JSON.stringify(itemInfo, null, 2), config.telegram_bot.token, config.telegram_bot.chat_id)
+            }
+
+            if (itemInfo.scale >= 1.05 && itemInfo.daily_sold_number >= 100) {
+                itemInfo['type'] = '高比例订单'
+                await telegramBot.sendMessageToTelegram(JSON.stringify(itemInfo, null, 2), config.telegram_bot.token, config.telegram_bot.chat_id)
+            }
+
+            // STEAM 最高买单价 <= BUFF 最低卖单价
+            if (itemInfo.steam_highest_buy_order <= itemInfo.buff_sell_min_price && itemInfo.daily_sold_number >= 100) {
+                itemInfo['type'] = '求购订单'
                 await telegramBot.sendMessageToTelegram(JSON.stringify(itemInfo, null, 2), config.telegram_bot.token, config.telegram_bot.chat_id)
             }
         } catch (e) {
             console.log("sendMessageToTelegram error")
         }
     }
-    
-    if(config.database.enable == true) {
+
+    if (config.database.enable == true) {
         try {
-            const databaseAPI = require('./database-api.js')
-            await databaseAPI.uploadDataToDatabase(itemInfo)
+            if (itemInfo.scale >= 1 || itemInfo.scale <= 0.9) {
+                const databaseAPI = require('./database-api.js')
+                await databaseAPI.uploadDataToDatabase(itemInfo)
+            }
         } catch (e) {
             console.log(e)
             console.log("uploadDataToDatabase error")
@@ -157,7 +177,7 @@ const uploadSteamItem = async (itemInfo) => {
 
 const gotoBuffMarketPage = async (page, pageNum, needReload = false) => {
     try {
-        const marketUrl = 'https://buff.163.com/market/csgo#tab=selling&page_num=' + (Math.floor(Math.random() * 100) + 1);
+        const marketUrl = 'https://buff.163.com/market/csgo#tab=selling&page_num=' + (Math.floor(Math.random() * 300) + 1);
         console.log('Goto Buff Order List: ' + marketUrl)
         await page.goto(marketUrl)
         if (needReload) {

@@ -1,6 +1,6 @@
 const request = require('request');
 
-function sendMessageToTelegram(text, token, chatId) {
+function sendMessageToTelegram(text, token, chatId, retry = 0) {
     return new Promise(function (resolve, reject) {
         const url = `https://api.telegram.org/${token}/sendMessage?chat_id=${chatId}&text=${text}`
         var option = {
@@ -12,7 +12,13 @@ function sendMessageToTelegram(text, token, chatId) {
         };
         request.get(option, function (err, res, body) {
             if (err || res.statusCode != 200) {
-                reject(err ? err : new Error('sendMessageToTelegram statusCode != 200'));
+                if (retry < 3) {
+                    sendMessageToTelegram(text, token, chatId, retry + 1).catch(err => {
+                        reject(err);
+                    });
+                } else {
+                    reject(err ? err : new Error('sendMessageToTelegram statusCode != 200'));
+                }
             } else {
                 resolve(JSON.parse(body));
             }
