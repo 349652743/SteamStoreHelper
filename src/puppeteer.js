@@ -49,7 +49,7 @@ const launchLoginPage = async (page) => {
         loginBtn = await getLoginUser(loginPage)
     }
     await saveCookies(loginPage)
-    await sleep(1000)
+    await sleep(3000)
     await browser.close()
 }
 
@@ -87,12 +87,12 @@ const processBuffItem = async (item) => {
         console.log(e)
         return
     } finally {
-        await sleep(2000);
+        await sleep(1000);
     }
 
     if (!steamSoldNumber.volume || steamSoldNumber.volume < 100) {
         console.log('=======================')
-        if(!steamSoldNumber.volume){
+        if (!steamSoldNumber.volume) {
             console.log(steamSoldNumber)
         }
         console.log('skip item：' + item.name + ' reason: steamSoldNumber is ' + steamSoldNumber.volume)
@@ -106,7 +106,7 @@ const processBuffItem = async (item) => {
         console.log(e)
         return
     } finally {
-        await sleep(7000);
+        await sleep(5000);
     }
 
     let steamHighestBuyOrder = steamOrders.highest_buy_order / 100.0;
@@ -119,6 +119,7 @@ const processBuffItem = async (item) => {
         steam_lowerst_sell_order: steamLowerstSellOrder,
         steam_highest_buy_order: steamHighestBuyOrder,
         achieved_price: withoutFeePrice,
+        steam_market_url: steamMarketUrl,
         name: item.name,
         daily_sold_number: steamSoldNumber.volume,
         current_date: getNowFormatDate()
@@ -143,21 +144,30 @@ const uploadSteamItem = async (itemInfo) => {
         try {
             const telegramBot = require('./telegram-bot.js')
             if (itemInfo.scale <= 0.75 && itemInfo.daily_sold_number >= 500) {
-                itemInfo['type'] = '低比例订单'
-                await telegramBot.sendMessageToTelegram(JSON.stringify(itemInfo, null, 2), config.telegram_bot.token, config.telegram_bot.chat_id)
+                itemInfo['type'] = (itemInfo['type'] ? itemInfo['type'] : '') + '|低比例订单|'
             }
 
             if (itemInfo.scale >= 1.05 && itemInfo.daily_sold_number >= 100) {
-                itemInfo['type'] = '高比例订单'
-                await telegramBot.sendMessageToTelegram(JSON.stringify(itemInfo, null, 2), config.telegram_bot.token, config.telegram_bot.chat_id)
+                itemInfo['type'] = (itemInfo['type'] ? itemInfo['type'] : '') + '|高比例订单|'
             }
 
             // STEAM 最高买单价 <= BUFF 最低卖单价
             if (itemInfo.steam_highest_buy_order <= itemInfo.buff_sell_min_price && itemInfo.daily_sold_number >= 100) {
-                itemInfo['type'] = '求购订单'
-                await telegramBot.sendMessageToTelegram(JSON.stringify(itemInfo, null, 2), config.telegram_bot.token, config.telegram_bot.chat_id)
+                itemInfo['type'] = (itemInfo['type'] ? itemInfo['type'] : '') + '|求购订单|'
             }
+
+            if (itemInfo['type']) {
+                await telegramBot.sendMessageToTelegram(JSON.stringify(itemInfo, null, 2), config.telegram_bot.token, config.telegram_bot.chat_id)
+                if(config.auto_trade.enable == true) {
+                    if (itemInfo['type'].includes('求购订单') || itemInfo['type'].includes('高比例订单')) {
+                        await telegramBot.sendSteamItemToAutoTrade(itemInfo)
+                    }
+                }
+            }
+
+
         } catch (e) {
+            console.log(e)
             console.log("sendMessageToTelegram error")
         }
     }
@@ -203,7 +213,6 @@ const loadCookies = async (page) => {
         } else {
             await page.setCookie(...cookies);
         }
-
     }
 }
 
